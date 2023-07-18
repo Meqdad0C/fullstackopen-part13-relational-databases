@@ -25,6 +25,18 @@ Blog.init(
       type: DataTypes.INTEGER,
       defaultValue: 0,
     },
+    year: {
+      type: DataTypes.INTEGER,
+      validate: {
+        min: 1991,
+        greaterThanCurrent (value) {
+          const current = new Date().getFullYear()
+          if (parseInt(value) > current) {
+            throw new Error(`year can not be greater than ${current}`)
+          }
+        },
+      },
+    },
     userId: {
       type: DataTypes.INTEGER,
       allowNull: false,
