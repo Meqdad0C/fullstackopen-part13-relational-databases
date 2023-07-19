@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken')
 const { SECRET } = require('./config.js')
+const { User, Session } = require('../models')
 
 const tokenExtractor = (req, res, next) => {
   const authorization = req.get('authorization')
@@ -15,4 +16,34 @@ const tokenExtractor = (req, res, next) => {
   next()
 }
 
-module.exports = { tokenExtractor }
+const sessionFrom = async (token) => {
+  return await Session.findOne({
+    where: {
+      token,
+    },
+    include: {
+      model: User,
+    },
+  })
+}
+
+const userFromToken = async (req, res, next) => {
+  const authorization = req.get('authorization')
+  if (!authorization || !authorization.toLowerCase().startsWith('bearer ')) {
+    return res.status(401).json({ error: 'token missing' })
+  }
+  const session = await sessionFrom(authorization.substring(7))
+
+  if (!session) {
+    return res.status(401).json({ error: 'no valid session' })
+  }
+
+  if (session.user.disabled) {
+    return res.status(401).json({ error: 'account disabled' })
+  }
+  req.user = session.user
+
+  next()
+}
+
+module.exports = { tokenExtractor, userFromToken }

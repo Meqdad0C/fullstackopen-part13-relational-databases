@@ -1,17 +1,16 @@
 const router = require('express').Router()
 
-const { Readinglist, User } = require('../models')
-const { tokenExtractor } = require('../util/middleware')
+const { Readinglist } = require('../models')
+const { userFromToken } = require('../util/middleware')
 
 router.post('/', async (req, res) => {
   const reading = await Readinglist.create(req.body)
   res.json(reading)
 })
 
-router.put('/:id', tokenExtractor, async (req, res) => {
+router.put('/:id', userFromToken, async (req, res) => {
   const reading = await Readinglist.findByPk(req.params.id)
-  const user = await User.findByPk(req.decodedToken.id)
-  if (user.id !== reading.userId) {
+  if (req.user.id !== reading.userId) {
     return res.status(401).send({
       error: 'only allowed to change status of own readings',
     })
