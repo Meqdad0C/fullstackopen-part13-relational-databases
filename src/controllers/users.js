@@ -1,13 +1,21 @@
 const router = require('express').Router()
+const { Team } = require('../models')
 
 const { User, Blog } = require('../models')
 
 router.get('/', async (req, res) => {
   const users = await User.findAll({
-    include: {
+    include: [{
       model: Blog,
       attributes: { exclude: ['userId'] },
     },
+    {
+      model: Team,
+      attributes: ['name', 'id'],
+      through: {
+        attributes: []
+      }
+    }],
   })
   res.json(users)
 })
